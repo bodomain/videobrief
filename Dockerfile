@@ -1,8 +1,8 @@
 FROM python:3.12-slim
 
-# System-Dependencies: ffmpeg für Video/Audio-Verarbeitung
+# System-Dependencies: ffmpeg für Video/Audio-Verarbeitung, nodejs für yt-dlp (--js-runtimes)
 RUN apt-get update && \
-    apt-get install -y --no-install-recommends ffmpeg && \
+    apt-get install -y --no-install-recommends ffmpeg nodejs npm && \
     rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app

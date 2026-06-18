@@ -6,6 +6,9 @@ from pathlib import Path
 
 from backend.config import DATA_DIR
 
+# yt-dlp braucht einen JS-Runtime für YouTube (Signaturextraktion etc.)
+JS_RUNTIMES = ["--js-runtimes", "nodejs"]
+
 
 def get_job_dir(video_id: str) -> Path:
     """Job-Verzeichnis für ein Video anlegen/zurückgeben."""
@@ -17,7 +20,7 @@ def get_job_dir(video_id: str) -> Path:
 def fetch_metadata(url: str) -> dict:
     """Video-Metadaten holen (ohne Download)."""
     result = subprocess.run(
-        ["yt-dlp", "--dump-json", "--no-download", url],
+        ["yt-dlp", *JS_RUNTIMES, "--dump-json", "--no-download", url],
         capture_output=True,
         text=True,
         check=True,
@@ -35,6 +38,7 @@ def download_subtitles(url: str, job_dir: Path) -> Path | None:
             subprocess.run(
                 [
                     "yt-dlp",
+                    *JS_RUNTIMES,
                     "--write-sub",
                     "--write-auto-sub",
                     "--sub-lang", lang,
@@ -61,6 +65,7 @@ def download_audio(url: str, job_dir: Path) -> Path:
     subprocess.run(
         [
             "yt-dlp",
+            *JS_RUNTIMES,
             "-x",
             "--audio-format", "mp3",
             "-o", out_template,
@@ -81,6 +86,7 @@ def download_video(url: str, job_dir: Path) -> Path:
     subprocess.run(
         [
             "yt-dlp",
+            *JS_RUNTIMES,
             "-f", "bestvideo[height<=1080]+bestaudio/best[height<=1080]",
             "--merge-output-format", "mp4",
             "-o", out_template,

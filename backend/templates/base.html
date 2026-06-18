@@ -6,6 +6,18 @@
     <title>{% block title %}VideoBrief{% endblock %}</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/htmx.org@1.9.10"></script>
+    <script>
+        // HTMX-Polling stoppen bei Fehlern (z.B. 404 nach Server-Neustart)
+        document.body.addEventListener('htmx:beforeRequest', function(evt) {
+            if (evt.detail.elt.getAttribute('hx-trigger') &&
+                evt.detail.elt.getAttribute('hx-trigger').indexOf('every') >= 0 &&
+                evt.detail.xhr.status >= 400) {
+                evt.preventDefault();
+                evt.detail.elt.removeAttribute('hx-trigger');
+                evt.detail.elt.removeAttribute('hx-get');
+            }
+        });
+    </script>
     <style>
         .prose h1 { font-size: 1.5rem; font-weight: 700; margin-top: 1rem; }
         .prose h2 { font-size: 1.25rem; font-weight: 600; margin-top: 1rem; }

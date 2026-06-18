@@ -2,6 +2,7 @@
 
 import uuid
 import asyncio
+import json
 from pathlib import Path
 from contextlib import asynccontextmanager
 
@@ -23,10 +24,49 @@ from backend.frame_extractor import extract_frames
 from backend.visual_filter import filter_similar_frames
 from backend.llm_analyzer import analyze_video
 from backend.report_writer import write_report
+from backend.excalidraw_generator import generate_presentation
 
 
 # --- Job-Store (einfaches In-Memory-Dict, später SQLite) ---
 jobs: dict = {}
+
+
+def _restore_job_from_disk(job_id: str) -> dict | None:
+    """Job aus dem Datenverzeichnis rekonstruieren (nach Neustart)."""
+    job_dir = DATA_DIR / job_id
+    if not job_dir.is_dir():
+        return None
+
+    report_path = job_dir / "report.md"
+    error_path = job_dir / "error.txt"
+
+    if error_path.exists():
+        status = "error"
+        step = error_path.read_text(encoding="utf-8")[:200]
+    elif report_path.exists():
+        status = "done"
+        step = "Fertig!"
+    else:
+        # Pipeline war noch am Laufen beim Neustart → als fehlgeschlagen markieren
+        status = "error"
+        step = "Durch Container-Neustart unterbrochen"
+
+    # Titel aus report.md extrahieren (erste H1-Zeile)
+    title = job_id
+    if report_path.exists():
+        for line in report_path.read_text(encoding="utf-8").splitlines():
+            if line.startswith("# "):
+                title = line[2:].strip()
+                break
+
+    return {
+        "id": job_id,
+        "url": "",
+        "title": title,
+        "status": status,
+        "step": step,
+        "job_dir": str(job_dir),
+    }
 
 
 @asynccontextmanager
@@ -90,6 +130,8 @@ async def get_job(request: Request, job_id: str):
     """Job-Detailseite."""
     job = jobs.get(job_id)
     if not job:
+        job = _restore_job_from_disk(job_id)
+    if not job:
         raise HTTPException(status_code=404, detail="Job nicht gefunden")
 
     # Report laden falls fertig
@@ -106,16 +148,48 @@ async def get_job(request: Request, job_id: str):
 
 
 @app.get("/jobs/{job_id}/status")
-async def get_job_status(job_id: str):
+async def get_job_status(request: Request, job_id: str):
     """HTMX-Partial: Job-Status für Polling."""
     job = jobs.get(job_id)
+    if not job:
+        job = _restore_job_from_disk(job_id)
     if not job:
         raise HTTPException(status_code=404, detail="Job nicht gefunden")
 
     return templates.TemplateResponse("_status.html", {
-        "request": None,
+        "request": request,
         "job": job,
     })
+
+
+@app.get("/jobs/{job_id}/redirect")
+async def redirect_to_job(job_id: str):
+    """HTMX-Redirect: Echte Browser-Navigation zur Job-Seite (bricht Polling-Loop)."""
+    from fastapi.responses import Response
+    return Response(headers={"HX-Redirect": f"/jobs/{job_id}"})
+
+
+@app.post("/jobs/{job_id}/presentation")
+async def build_presentation(job_id: str):
+    """Excalidraw-Praesentation on-demand generieren."""
+    job = jobs.get(job_id)
+    if not job:
+        job = _restore_job_from_disk(job_id)
+    if not job:
+        raise HTTPException(status_code=404, detail="Job nicht gefunden")
+
+    report_path = Path(job["job_dir"]) / "report.md"
+    if not report_path.exists():
+        raise HTTPException(status_code=404, detail="Report noch nicht vorhanden")
+
+    pres_dir = Path(job["job_dir"]) / "presentation"
+    pres_path = generate_presentation(report_path, pres_dir)
+
+    return {
+        "job_id": job_id,
+        "presentation": str(pres_path),
+        "elements": len(json.loads(pres_path.read_text())["elements"]),
+    }
 
 
 # --- Pipeline ---
@@ -155,6 +229,11 @@ async def run_pipeline(video_id: str, url: str, title: str, job_dir: Path):
         # Step 6: Report schreiben
         jobs[video_id]["step"] = "Report generieren…"
         write_report(job_dir, title, url, transcript, analysis, unique_frames)
+
+        # Step 7: Excalidraw-Präsentation generieren
+        jobs[video_id]["step"] = "Präsentation erstellen…"
+        report_path = job_dir / "report.md"
+        generate_presentation(report_path, job_dir / "presentation")
 
         # Fertig
         jobs[video_id]["status"] = "done"

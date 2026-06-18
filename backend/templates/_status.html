@@ -1,9 +1,8 @@
 {% if job.status == 'done' %}
 <div class="flex items-center gap-2 text-green-600 font-medium"
-     hx-get="/jobs/{{ job.id }}"
+     hx-get="/jobs/{{ job.id }}/redirect"
      hx-trigger="load"
-     hx-target="body"
-     hx-push-url="true">
+     hx-swap="none">
     <span class="text-xl">✓</span>
     <span>Analyse abgeschlossen — Seite wird aktualisiert…</span>
 </div>
@@ -15,7 +14,10 @@
 </div>
 
 {% else %}
-<div class="flex items-center gap-3">
+<div class="flex items-center gap-3"
+     hx-get="/jobs/{{ job.id }}/status"
+     hx-trigger="every 2s"
+     hx-swap="outerHTML">
     <div class="animate-spin w-5 h-5 border-2 border-blue-600 border-t-transparent rounded-full"></div>
     <span class="text-gray-700">{{ job.step }}</span>
 </div>

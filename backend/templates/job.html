@@ -13,8 +13,8 @@
 
     <div id="job-status"
          hx-get="/jobs/{{ job.id }}/status"
-         hx-trigger="every 2s"
-         hx-swap="innerHTML">
+         hx-trigger="{{ 'every 2s' if job.status == 'running' else 'none' }}"
+         hx-swap="outerHTML">
         {% include "_status.html" %}
     </div>
 </div>

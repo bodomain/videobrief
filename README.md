@@ -1,9 +1,10 @@
 # VideoBrief
 
-**YouTube Video → Text + Charts**
+**YouTube Video → Text + Charts + Excalidraw-Präsentation**
 
 Aus Fachvideos, Webinaren und Research-Präsentationen automatisch strukturierte
-Notizen inklusive Charts, Kernaussagen und Handlungspunkten erzeugen.
+Notizen inklusive Charts, Kernaussagen und Handlungspunkten erzeugen — plus
+eine Excalidraw-Präsentation im Karpathy-Stil (eine große Canvas, alles räumlich verbunden).
 
 ## Setup
 
@@ -33,8 +34,8 @@ docker compose down
 
 ```bash
 # 1. System-Tools installieren
-# macOS: brew install yt-dlp ffmpeg
-# Ubuntu: sudo apt install yt-dlp ffmpeg
+# macOS: brew install yt-dlp ffmpeg node
+# Ubuntu: sudo apt install yt-dlp ffmpeg nodejs
 
 # 2. Python-Dependencies
 pip install -r requirements.txt
@@ -53,7 +54,7 @@ python -m uvicorn backend.app:app --reload
 ```text
 YouTube-URL
    ↓
-Audio/Video herunterladen        (yt-dlp)
+Audio/Video herunterladen        (yt-dlp + nodejs JS-Runtime)
    ↓
 Transkript erzeugen              (YouTube-Untertitel / Whisper)
    ↓
@@ -63,7 +64,9 @@ Frames/Screenshots extrahieren   (ffmpeg, 1 Frame / 2s)
    ↓
 LLM analysiert Text + Bilder     (OpenAI gpt-4o Vision)
    ↓
-Markdown-Report mit Charts
+Markdown-Report                  (report.md)
+   ↓
+Excalidraw-Präsentation          (praesentation.excalidraw)
 ```
 
 ## Output pro Job
@@ -75,18 +78,30 @@ data/jobs/<video_id>/
   ├── transcript.txt
   ├── frames/
   │   ├── frame_0001.jpg
-  │   ├── frame_0002.jpg
   │   └── ...
+  ├── presentation/
+  │   └── praesentation.excalidraw   ← Karpathy-Style Canvas
   ├── report.md
   └── title.md
 ```
+
+## API
+
+| Methode | Endpunkt | Beschreibung |
+|---------|----------|-------------|
+| `GET` | `/` | Startseite mit Eingabeformular |
+| `POST` | `/jobs` | Neuen Job anlegen (`url=...`) |
+| `GET` | `/jobs/{id}` | Job-Detailseite mit Report |
+| `GET` | `/jobs/{id}/status` | HTMX-Partial: Live-Status |
+| `POST` | `/jobs/{id}/presentation` | Excalidraw-Präsentation generieren |
 
 ## Tech-Stack
 
 - **Backend:** Python, FastAPI
 - **Frontend:** Jinja2 + HTMX + Tailwind CSS
-- **Download:** yt-dlp
+- **Download:** yt-dlp (mit Node.js JS-Runtime)
 - **Video:** ffmpeg
 - **Transkription:** YouTube-Untertitel + OpenAI Whisper API
 - **Vision:** OpenAI gpt-4o
 - **Filter:** imagehash (perceptual hashing)
+- **Präsentation:** Excalidraw JSON (Karpathy-Style Canvas)
