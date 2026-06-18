@@ -1,0 +1,52 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="mb-8">
+    <h1 class="text-2xl font-bold text-gray-800 mb-2">YouTube Video zusammenfassen</h1>
+    <p class="text-gray-600">URL einfügen → Transkript + Charts + Markdown-Report</p>
+</div>
+
+<form action="/jobs" method="post" class="mb-8">
+    <div class="flex gap-2">
+        <input
+            type="url"
+            name="url"
+            placeholder="https://www.youtube.com/watch?v=..."
+            required
+            class="flex-1 px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+        >
+        <button
+            type="submit"
+            class="px-6 py-3 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 transition"
+        >
+            Analysieren
+        </button>
+    </div>
+</form>
+
+{% if jobs %}
+<div>
+    <h2 class="text-lg font-semibold text-gray-700 mb-3">Letzte Jobs</h2>
+    <div class="space-y-2">
+        {% for job_id, job in jobs.items() %}
+        <a href="/jobs/{{ job_id }}" class="block p-4 bg-white rounded-lg shadow-sm border hover:shadow-md transition">
+            <div class="flex justify-between items-start">
+                <div>
+                    <h3 class="font-medium text-gray-800">{{ job.title }}</h3>
+                    <p class="text-sm text-gray-500">{{ job.url }}</p>
+                </div>
+                <span class="px-2 py-1 text-xs rounded-full
+                    {% if job.status == 'done' %}bg-green-100 text-green-700
+                    {% elif job.status == 'error' %}bg-red-100 text-red-700
+                    {% else %}bg-yellow-100 text-yellow-700{% endif %}">
+                    {% if job.status == 'done' %}✓ Fertig
+                    {% elif job.status == 'error' %}✗ Fehler
+                    {% else %}⟳ {{ job.step }}{% endif %}
+                </span>
+            </div>
+        </a>
+        {% endfor %}
+    </div>
+</div>
+{% endif %}
+{% endblock %}

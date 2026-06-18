@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}VideoBrief{% endblock %}</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/htmx.org@1.9.10"></script>
+    <style>
+        .prose h1 { font-size: 1.5rem; font-weight: 700; margin-top: 1rem; }
+        .prose h2 { font-size: 1.25rem; font-weight: 600; margin-top: 1rem; }
+        .prose h3 { font-size: 1.1rem; font-weight: 600; margin-top: 0.75rem; }
+        .prose p { margin: 0.5rem 0; }
+        .prose ul { list-style: disc; margin-left: 1.5rem; }
+        .prose ol { list-style: decimal; margin-left: 1.5rem; }
+    </style>
+</head>
+<body class="bg-gray-50 min-h-screen">
+    <nav class="bg-white shadow-sm border-b">
+        <div class="max-w-4xl mx-auto px-4 py-3">
+            <a href="/" class="text-xl font-bold text-blue-600">VideoBrief</a>
+            <span class="text-gray-500 text-sm ml-2">YouTube → Text + Charts</span>
+        </div>
+    </nav>
+
+    <main class="max-w-4xl mx-auto px-4 py-8">
+        {% block content %}{% endblock %}
+    </main>
+</body>
+</html>

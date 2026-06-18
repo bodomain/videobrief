@@ -1,0 +1,22 @@
+{% if job.status == 'done' %}
+<div class="flex items-center gap-2 text-green-600 font-medium"
+     hx-get="/jobs/{{ job.id }}"
+     hx-trigger="load"
+     hx-target="body"
+     hx-push-url="true">
+    <span class="text-xl">✓</span>
+    <span>Analyse abgeschlossen — Seite wird aktualisiert…</span>
+</div>
+
+{% elif job.status == 'error' %}
+<div class="flex items-center gap-2 text-red-600">
+    <span class="text-xl">✗</span>
+    <span>{{ job.step }}</span>
+</div>
+
+{% else %}
+<div class="flex items-center gap-3">
+    <div class="animate-spin w-5 h-5 border-2 border-blue-600 border-t-transparent rounded-full"></div>
+    <span class="text-gray-700">{{ job.step }}</span>
+</div>
+{% endif %}
