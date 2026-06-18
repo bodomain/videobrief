@@ -7,23 +7,43 @@ Notizen inklusive Charts, Kernaussagen und Handlungspunkten erzeugen.
 
 ## Setup
 
-```bash
-# 1. Dependencies installieren
-pip install -r requirements.txt
+### Mit Docker (empfohlen)
 
-# 2. System-Tools (falls nicht vorhanden)
+```bash
+# 1. OpenAI API Key konfigurieren
+cp .env.example .env
+nano .env  # OPENAI_API_KEY eintragen
+
+# 2. Container starten
+docker compose up -d
+# → http://localhost:8000
+```
+
+**Logs ansehen:**
+```bash
+docker compose logs -f
+```
+
+**Stoppen:**
+```bash
+docker compose down
+```
+
+### Lokal (für Entwicklung)
+
+```bash
+# 1. System-Tools installieren
 # macOS: brew install yt-dlp ffmpeg
 # Ubuntu: sudo apt install yt-dlp ffmpeg
+
+# 2. Python-Dependencies
+pip install -r requirements.txt
 
 # 3. OpenAI API Key
 cp .env.example .env
 # OPENAI_API_KEY in .env eintragen
-```
 
-## Starten
-
-```bash
-cd /home/user/Desktop/videobrief
+# 4. Server starten
 python -m uvicorn backend.app:app --reload
 # → http://localhost:8000
 ```
@@ -70,4 +90,3 @@ data/jobs/<video_id>/
 - **Transkription:** YouTube-Untertitel + OpenAI Whisper API
 - **Vision:** OpenAI gpt-4o
 - **Filter:** imagehash (perceptual hashing)
-# videobrief
